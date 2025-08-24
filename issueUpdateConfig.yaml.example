@@ -1,0 +1,70 @@
+---
+# настройки экспорта данных из Jira
+# с указанными настройками будут выполняться http-запросы к инстансу на получение данных о задачах
+# в разных форматах
+dataFetchConfig:
+  jiraAuthSettings:
+    baseUrl: "http://localhost:8080"
+    # аутентификация с помошью bearerToken-а имеет приоритет над basic-аутентификацией
+    # если указан bearerToken, то для аутентификации будет использован он
+    bearerToken:
+    basicLogin: "admin"
+    basicPassword: "admin"
+  # количество попыток повторной загрузки данных из Jira. Применяется в случае сетевых ошибок соединения
+  # попытки учитываются отдельной для каждого указанного JQL (см. ниже)
+  # ВНИМАНИЕ! Данные будут загружаться с начала, догрузка данных в рамках одного запроса не поддерживается
+  retryCount: 3
+  # пауза (в секундах) между попытками повторной загрузки данных
+  retryPause: 10
+  # список jql-запросов, по которым нужно выгрузить данные
+  # список не может быть пустым
+  # полезно в случае нестабильного соединения или ограничения на количество одновременно выгружаемых задач
+  partialDataJql:
+    - project = AD
+importConfig:
+  attachmentImportSettings:
+    baseUrl: "http://admin:admin@localhost:8080"
+mappingConfig:
+  # поля указанных типов будут удалены из набора данных
+  removedFieldTypes:
+    - com.pyxis.greenhopper.jira:gh-lexo-rank
+  # поля с указанными именами будут удалены из набора данных
+  # !!! Внимание !!!
+  # Если задача экспортируется дважды, то при заполненном поле External issue ID (на целоевой системе) значения ее
+  # филдов не будут обновлены
+  removedFieldNames:
+    - External issue ID
+  # значения полей указанных типов будут маппится с помощью CommonUpdaterUtils::mapApplicationUserLogin
+  userNameFieldTypes:
+    - com.atlassian.jira.plugin.system.customfieldtypes:userpicker
+  # для пользователей из этого списка маппинг применяться не будет. С.м. CommonUpdaterUtils.groovy
+  ignoredUserNames:
+    - jenkins-bot
+  userNameMapping:
+    "automation-bot": "augusto"
+  issueTypeMapping:
+    "Support request": "Обращение"
+  customFieldsMapping:
+    "Quality level": "Оценка"
+  # маппинг типов пользовательских полей
+  # полезен в том случае, когда меняется тип поля. Например Radiobuttons -> Select List (single choose)
+  customFieldTypeMappings:
+    - fieldName: "Quality level"
+      oldType: "com.atlassian.jira.plugin.system.customfieldtypes:radiobuttons"
+      newType: "com.atlassian.jira.plugin.system.customfieldtypes:select"
+  statusMapping:
+    "Canceled": "Отменено"
+  linkNameMapping:
+    "Relations": "Relates"
+# используется для частичной генерации мигрируемых данных
+dataGenerationConfig:
+  generateIssuesData: true
+  generateLinksData: true
+  generateHistoryData: true
+# список перенесенных проектов и маппинг их ключей
+# в этот список нужно включать так же и тот проект, задачи которого планируется переносить в текущей миграции
+# на основании этого списка формируется информация о линках задач - информация о линках с задачами проектов, не указанных
+# в этом списке, формироваться не будет
+migratedProjects:
+  "AD": "AD"
+  "SUP": "SUPPORT"
