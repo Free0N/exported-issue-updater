@@ -26,6 +26,7 @@ import org.samearch.jira.util.migration.impl.DefaultIssuesDataRepository;
 import org.samearch.jira.util.migration.impl.dto.json.ExportedIssuesDocumentJsonDto;
 import org.samearch.jira.util.migration.impl.dto.json.IssueLinkJsonDto;
 import org.samearch.jira.util.migration.impl.dto.json.ProjectJsonDto;
+import org.samearch.jira.util.migration.impl.util.IssueUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @Component
 public class JsonFileIssueDataExporter implements IssueDataExporter {
@@ -72,7 +74,7 @@ public class JsonFileIssueDataExporter implements IssueDataExporter {
 
         var projectDtos = actualDataRepository.getProjects().stream()
             .map(ProjectJsonDto::fromProject)
-            .collect(Collectors.toList());
+            .toList();
         issuesJsonObject.setProjects(projectDtos);
 
         try {
@@ -83,6 +85,7 @@ public class JsonFileIssueDataExporter implements IssueDataExporter {
     }
 
     private Set<Issue> attachIssueLinksData(ExportedIssuesDocumentJsonDto issuesJsonObject, IssuesDataRepository dataRepository) {
+        var migratedProjectKeys = updateConfig.migratedProjects().values();
         var additionalIssues = new HashSet<Issue>();
         var issueLinkDtos = new HashSet<IssueLinkJsonDto>();
         dataRepository.getProjects().stream()
@@ -91,16 +94,18 @@ public class JsonFileIssueDataExporter implements IssueDataExporter {
                 .map(Issue::issueLinks)
                 .flatMap(List::stream)
                 .map(issueLink -> {
-                    var srcIssue =  new Issue();
-                    srcIssue.setId(issueLink.sourceId());
-                    srcIssue.setKey(issueLink.sourceKey());
-                    additionalIssues.add(srcIssue);
-                    var dstIssue =  new Issue();
-                    dstIssue.setId(issueLink.destinationId());
-                    dstIssue.setKey(issueLink.destinationKey());
-                    additionalIssues.add(dstIssue);
+                    var srcIssueKey = issueLink.sourceKey();
+                    var dstIssueKey = issueLink.destinationKey();
+                    var srcProject = IssueUtil.extractProjectKey(srcIssueKey).orElse(null);
+                    var dstProject = IssueUtil.extractProjectKey(dstIssueKey).orElse(null);
+                    if (!migratedProjectKeys.contains(srcProject) || !migratedProjectKeys.contains(dstProject)) {
+                        return null;
+                    }
+                    var linkedIssues = issueLink.toIssues();
+                    additionalIssues.addAll(linkedIssues);
                     return IssueLinkJsonDto.fromIssueLink(issueLink);
                 })
+                .filter(Objects::nonNull)
                 .forEach(issueLinkDtos::add);
         if (!additionalIssues.isEmpty()) {
             dataRepository.mergeIssuesData(additionalIssues);

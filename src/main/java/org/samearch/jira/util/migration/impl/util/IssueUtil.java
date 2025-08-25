@@ -15,7 +15,7 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package org.samearch.jira.util.migration.impl.data_import.util;
+package org.samearch.jira.util.migration.impl.util;
 
 import java.util.Optional;
 import java.util.regex.Pattern;

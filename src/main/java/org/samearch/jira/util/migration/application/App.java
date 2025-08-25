@@ -31,19 +31,20 @@ import org.springframework.stereotype.Component;
 public class App {
 
     public static void main(String[] args) {
-        var applicationContext = new AnnotationConfigApplicationContext();
-        var groovyIntegration = new GroovyIntegration(applicationContext.getClassLoader(), "./updaters");
-        applicationContext.setClassLoader(groovyIntegration.getGroovyClassLoader());
-        var cliPropertiesSource = new SimpleCommandLinePropertySource(args);
-        applicationContext.getEnvironment().getPropertySources().addFirst(cliPropertiesSource);
-        applicationContext.register(SpringApplicationConfiguration.class);
-        var groovyDataUpdaters = groovyIntegration.loadGroovyClasses();
-        groovyDataUpdaters.stream()
-                .filter(App::isDataUpdater)
-                .forEach(applicationContext::register);
-        applicationContext.refresh();
-        applicationContext.getBean(ExportedIssuesUpdater.class)
-                .fetchAndUpdateIssuesData();
+        try (var applicationContext = new AnnotationConfigApplicationContext()) {
+            var groovyIntegration = new GroovyIntegration(applicationContext.getClassLoader(), "./updaters");
+            applicationContext.setClassLoader(groovyIntegration.getGroovyClassLoader());
+            var cliPropertiesSource = new SimpleCommandLinePropertySource(args);
+            applicationContext.getEnvironment().getPropertySources().addFirst(cliPropertiesSource);
+            applicationContext.register(SpringApplicationConfiguration.class);
+            var groovyDataUpdaters = groovyIntegration.loadGroovyClasses();
+            groovyDataUpdaters.stream()
+                    .filter(App::isDataUpdater)
+                    .forEach(applicationContext::register);
+            applicationContext.refresh();
+            applicationContext.getBean(ExportedIssuesUpdater.class)
+                    .fetchAndUpdateIssuesData();
+        }
     }
 
     private static boolean isDataUpdater(Class<?> clazz) {

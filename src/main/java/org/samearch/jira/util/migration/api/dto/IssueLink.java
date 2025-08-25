@@ -17,6 +17,8 @@
 
 package org.samearch.jira.util.migration.api.dto;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public final class IssueLink extends AbstractDtoObject<IssueLink> {
@@ -106,6 +108,19 @@ public final class IssueLink extends AbstractDtoObject<IssueLink> {
 		runIfBlank(sourceKey, () -> sourceKey = otherObject.sourceKey);
 		runIfBlank(destinationId, () -> destinationId = otherObject.destinationId);
 		runIfBlank(destinationKey, () -> destinationKey = otherObject.destinationKey);
+	}
+
+	public List<Issue> toIssues() {
+		var issues = new ArrayList<Issue>();
+		var srcIssue = new Issue();
+		srcIssue.setId(sourceId);
+		srcIssue.setKey(sourceKey);
+		issues.add(srcIssue);
+		var dstIssue = new Issue();
+		dstIssue.setId(destinationId);
+		dstIssue.setKey(destinationKey);
+		issues.add(dstIssue);
+		return issues;
 	}
 
 }
