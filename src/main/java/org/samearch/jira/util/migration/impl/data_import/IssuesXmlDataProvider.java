@@ -24,8 +24,8 @@ import org.samearch.jira.util.migration.api.dto.Project;
 import org.samearch.jira.util.migration.impl.data_import.util.IssueXmlDataReader;
 import org.samearch.jira.util.migration.api.exception.DataFetchException;
 import org.samearch.jira.util.migration.impl.data_import.util.AbstractJiraDataFetcher;
-import org.samearch.jira.util.migration.impl.data_import.util.IssueUtil;
 import org.samearch.jira.util.migration.impl.dto.xml.IssueXmlDto;
+import org.samearch.jira.util.migration.impl.util.IssueUtil;
 import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayInputStream;
