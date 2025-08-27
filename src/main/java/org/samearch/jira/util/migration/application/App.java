@@ -30,11 +30,17 @@ import org.springframework.stereotype.Component;
 
 public class App {
 
+    private static final String DEFAULT_UPDATERS_PATH = "./updaters";
+
     public static void main(String[] args) {
         try (var applicationContext = new AnnotationConfigApplicationContext()) {
-            var groovyIntegration = new GroovyIntegration(applicationContext.getClassLoader(), "./updaters");
-            applicationContext.setClassLoader(groovyIntegration.getGroovyClassLoader());
             var cliPropertiesSource = new SimpleCommandLinePropertySource(args);
+            var updatersDirectory = cliPropertiesSource.getProperty("updatersPath");
+            var actualUpdatersDirectory = (updatersDirectory != null)
+                    ? updatersDirectory
+                    : DEFAULT_UPDATERS_PATH;
+            var groovyIntegration = new GroovyIntegration(applicationContext.getClassLoader(), actualUpdatersDirectory);
+            applicationContext.setClassLoader(groovyIntegration.getGroovyClassLoader());
             applicationContext.getEnvironment().getPropertySources().addFirst(cliPropertiesSource);
             applicationContext.register(SpringApplicationConfiguration.class);
             var groovyDataUpdaters = groovyIntegration.loadGroovyClasses();
